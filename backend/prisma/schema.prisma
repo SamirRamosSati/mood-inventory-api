@@ -1,0 +1,81 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+id String @id @default(uuid())
+vendorId      String
+vendor        Vendor @relation(fields: [vendorId], references: [id])
+sku String @unique
+name String
+description String?
+currentStock  Int    @default(0)
+locationId String? 
+location      Location? @relation(fields: [locationId], references: [id])
+createdAt     DateTime  @default(now()) 
+updatedAt     DateTime  @updatedAt 
+
+
+ stockMovements StockMovement[]
+}
+
+model StockMovement {
+  id             String    @id @default(uuid())
+  productId      String
+  product        Product   @relation(fields: [productId], references: [id])
+  type           MovementType
+  quantityChange Int
+  movementDate   DateTime  @default(now())
+  orderNumber    String?
+  staffId        String?
+  staff          Staff?    @relation(fields: [staffId], references: [id])
+  notes          String?
+  relatedInfo    Json?
+  createdAt      DateTime  @default(now()) 
+}
+
+enum MovementType {
+  ARRIVAL
+  DELIVERY
+  PICKUP
+  ADJUSTMENT
+}
+
+model Staff {
+  id          String @id @default(uuid())
+  name        String
+  initials    String @unique
+  role        String
+  email       String @unique
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stockMovements StockMovement[]
+}
+
+model Vendor {
+  id         String @id @default(uuid())
+  name       String @unique
+  contactInfo String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  products Product[]
+}
+
+model Location {
+  id          String @id @default(uuid())
+  name        String @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products Product[]
+}
