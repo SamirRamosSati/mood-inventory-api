@@ -3,8 +3,9 @@
 import express from "express";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
-import vendorsRoutes from "./routes/vendor.routes";
+import vendorsRoutes from "./routes/vendors.routes";
 import productsRoutes from "./routes/products.routes";
+import locationRoutes from "./routes/location.routes";
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.get("/", (req, res) => {
   res.send("running");
 });
 
+app.use("/locations", locationRoutes);
 app.use("/vendors", vendorsRoutes);
 app.use("/products", productsRoutes);
 
