@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import vendorsRoutes from "./routes/vendors.routes";
 import productsRoutes from "./routes/products.routes";
 import locationRoutes from "./routes/location.routes";
+import staffRoutes from "./routes/staff.routes";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
   res.send("running");
 });
 
+app.use("/staff", staffRoutes);
 app.use("/locations", locationRoutes);
 app.use("/vendors", vendorsRoutes);
 app.use("/products", productsRoutes);
