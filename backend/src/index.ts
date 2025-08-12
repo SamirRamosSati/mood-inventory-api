@@ -8,6 +8,7 @@ import productsRoutes from "./routes/products.routes";
 import locationRoutes from "./routes/location.routes";
 import staffRoutes from "./routes/staff.routes";
 import stockMovementRoutes from "./routes/stockMovements.routes";
+import authRoutes from "./auth/auth.routes";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ app.use("/locations", locationRoutes);
 app.use("/vendors", vendorsRoutes);
 app.use("/products", productsRoutes);
 app.use("/stock-movements", stockMovementRoutes);
+app.use("/register", authRoutes);
 
 const server = app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { PrismaClient, MovementType } from "@prisma/client";
+import { PrismaClient, MovementType, Prisma } from "@prisma/client";
 import * as stockMovementService from "../services/stockMovements.service";
 
 const prisma = new PrismaClient();
@@ -9,9 +9,17 @@ export const createStockMovement = async (req: Request, res: Response) => {
   try {
     const { productId, type, quantityChange, orderNumber, staffId, notes } =
       req.body;
-    if (!productId || !type || !quantityChange) {
+
+    if (
+      !productId ||
+      productId.trim() === "" ||
+      !type ||
+      type.trim() === "" ||
+      !quantityChange
+    ) {
       return res.status(400).json({
-        error: "productId, type of movement and quantity are required",
+        error:
+          "productId, type of movement and quantity are required and cannot be empty.",
       });
     }
 
@@ -39,13 +47,19 @@ export const createStockMovement = async (req: Request, res: Response) => {
     });
     res.status(201).json(newMovement);
   } catch (error: any) {
-    console.error("Error creating stock movement:", error);
-
-    if (error.code === "P2003") {
-      return res.status(400).json({ error: "Invalid product or staff ID." });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case "P2003":
+          return res
+            .status(400)
+            .json({ error: "Invalid product or staff ID." });
+        default:
+          return res
+            .status(500)
+            .json({ error: "Failed to create stock movement." });
+      }
     }
-
-    res.status(500).json({ error: "Failed to create stock movement." });
+    return res.status(500).json({ error: "Failed to create stock movement." });
   }
 };
 
@@ -61,8 +75,7 @@ export const getStockMovements = async (req: Request, res: Response) => {
     const movements = await stockMovementService.getStockMovements(whereClause);
     res.status(200).json(movements);
   } catch (error: any) {
-    console.error("Error fetching stock movements:", error);
-    res.status(500).json({ error: "Failed to fetch stock movements." });
+    return res.status(500).json({ error: "Failed to fetch stock movements." });
   }
 };
 
@@ -72,11 +85,12 @@ export const deleteStockMovements = async (req: Request, res: Response) => {
     await stockMovementService.deleteStockMovements(id);
     res.status(200).json({ message: "The movement got deleted" });
   } catch (error: any) {
-    console.error("Error deleting the movement:", error);
-    if (error.code === "P2025") {
-      return res.status(404).json({ error: "Movement not found." });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return res.status(404).json({ error: "Movement not found." });
+      }
     }
-    res.status(500).json({ error: "Failed to delete the movement." });
+    return res.status(500).json({ error: "Failed to delete the movement." });
   }
 };
 
@@ -85,26 +99,32 @@ export const editStockMovement = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { quantityChange, orderNumber, notes, staffId } = req.body;
 
-    if (!quantityChange && !orderNumber && !notes && !staffId) {
-      return res
-        .status(400)
-        .json({ error: "At least one field must be provided for the update." });
+    const updatedData = { quantityChange, orderNumber, notes, staffId };
+
+    const cleanedData = Object.fromEntries(
+      Object.entries(updatedData).filter(
+        ([_, value]) => value !== undefined && value !== null && value !== ""
+      )
+    );
+
+    if (Object.keys(cleanedData).length === 0) {
+      return res.status(400).json({
+        error:
+          "At least one field with a valid value must be provided for the update.",
+      });
     }
+
     const updatedStockMovement = await stockMovementService.editStockMovement(
       id,
-      {
-        quantityChange,
-        orderNumber,
-        notes,
-        staffId,
-      }
+      cleanedData
     );
     res.status(200).json(updatedStockMovement);
   } catch (error: any) {
-    console.error("Error updating stock movement:", error);
-    if (error.message === "Movement not found.") {
-      return res.status(404).json({ error: "Movement not found." });
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2025") {
+        return res.status(404).json({ error: "Movement not found." });
+      }
     }
-    res.status(500).json({ error: "Failed to update stock movement." });
+    return res.status(500).json({ error: "Failed to update stock movement." });
   }
 };

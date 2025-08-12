@@ -53,7 +53,6 @@ model Staff {
   initials    String @unique
   role        String
   email       String @unique
-  password    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -78,4 +77,13 @@ model Location {
   updatedAt   DateTime @updatedAt
 
   products Product[]
+}
+
+model User {
+  id         String @id @default(uuid())
+  email      String @unique
+  password   String 
+  name       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
