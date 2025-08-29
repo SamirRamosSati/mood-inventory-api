@@ -1,18 +1,15 @@
 import { Router } from "express";
-import { login } from "./auth.controller";
-import { registerUser } from "./auth.controller";
+import { getAllPermissions } from "../controllers/permission.controller";
 import { authMiddleware } from "../middleware/auth-middleware";
 import { checkPermission } from "../middleware/permission-middleware";
 
 const router = Router();
 
-router.post(
-  "/register",
+router.get(
+  "/",
   authMiddleware,
-  checkPermission("create_user"),
-  registerUser
+  checkPermission("read_permissions"),
+  getAllPermissions
 );
-
-router.post("/login", login);
 
 export default router;

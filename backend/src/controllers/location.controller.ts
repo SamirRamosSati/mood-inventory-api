@@ -65,7 +65,7 @@ export const editLocation = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
-    const updatedData = { name, description };
+    const updatedData = { name, description }; 
     const cleanedData = Object.fromEntries(
       Object.entries(updatedData).filter(
         ([_, value]) => value && value.trim() !== ""

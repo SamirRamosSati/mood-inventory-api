@@ -6,9 +6,10 @@ import dotenv from "dotenv";
 import vendorsRoutes from "./routes/vendors.routes";
 import productsRoutes from "./routes/products.routes";
 import locationRoutes from "./routes/location.routes";
-import staffRoutes from "./routes/staff.routes";
 import stockMovementRoutes from "./routes/stockMovements.routes";
+import roleRoutes from "./routes/role.routes";
 import authRoutes from "./auth/auth.routes";
+import permissionsRoutes from "./routes/permission.routes";
 
 dotenv.config();
 
@@ -23,12 +24,13 @@ app.get("/", (req, res) => {
   res.send("running");
 });
 
-app.use("/staff", staffRoutes);
 app.use("/locations", locationRoutes);
 app.use("/vendors", vendorsRoutes);
 app.use("/products", productsRoutes);
 app.use("/stock-movements", stockMovementRoutes);
-app.use("/register", authRoutes);
+app.use("/roles", roleRoutes);
+app.use("/auth", authRoutes);
+app.use("/permissions", permissionsRoutes);
 
 const server = app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
