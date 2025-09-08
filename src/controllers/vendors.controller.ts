@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import * as vendorService from "../services/vendors.service";
-import { Prisma } from "@prisma/client";
 
 export const createVendor = async (req: Request, res: Response) => {
   try {
@@ -14,7 +13,7 @@ export const createVendor = async (req: Request, res: Response) => {
     res.status(201).json(newVendor);
   } catch (error: any) {
     console.error("Error creating a vendor:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2002":
           return res
@@ -49,18 +48,16 @@ export const editVendor = async (req: Request, res: Response) => {
       )
     );
     if (Object.keys(cleanedData).length === 0) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "At least one field with a valid value must be provided for the update.",
-        });
+      return res.status(400).json({
+        error:
+          "At least one field with a valid value must be provided for the update.",
+      });
     }
     const updatedVendor = await vendorService.editVendor(id, cleanedData);
     res.status(200).json(updatedVendor);
   } catch (error: any) {
     console.error("Error updating vendor:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Vendor not found." });
@@ -83,7 +80,7 @@ export const deleteVendor = async (req: Request, res: Response) => {
     res.status(200).json({ message: "The vendor got deleted" });
   } catch (error: any) {
     console.error("Error deleting vendor:", error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Vendor not found." });

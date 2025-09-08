@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import * as roleService from "../services/role.service";
-import { Prisma } from "@prisma/client";
 
 export const createRole = async (req: Request, res: Response) => {
   try {
@@ -22,7 +21,7 @@ export const createRole = async (req: Request, res: Response) => {
     );
     res.status(201).json(newRole);
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2002":
           return res
@@ -79,7 +78,7 @@ export const editRole = async (req: Request, res: Response) => {
     const updatedRole = await roleService.editRole(id, updatedData);
     res.status(200).json(updatedRole);
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Role not found." });
@@ -101,7 +100,7 @@ export const deleteRole = async (req: Request, res: Response) => {
     await roleService.deleteRole(id);
     res.status(200).json({ message: "The role was successfully deleted." });
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Role not found." });

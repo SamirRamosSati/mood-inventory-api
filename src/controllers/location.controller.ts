@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import * as locationService from "../services/location.service";
-import { Prisma } from "@prisma/client";
 
 export const createLocation = async (req: Request, res: Response) => {
   try {
@@ -16,12 +15,10 @@ export const createLocation = async (req: Request, res: Response) => {
     });
     res.status(201).json(newLocation);
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        return res
-          .status(409)
-          .json({ error: "A location with this name already exists." });
-      }
+    if (error && error.code === "P2002") {
+      return res
+        .status(409)
+        .json({ error: "A location with this name already exists." });
     }
     res.status(500).json({ error: "Error creating the location" });
   }
@@ -42,18 +39,16 @@ export const deleteLocation = async (req: Request, res: Response) => {
     await locationService.deleteLocation(id);
     res.status(200).json({ message: "The location was successfully deleted." });
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Location not found." });
         case "P2003":
-          return res
-            .status(400)
-            .json({
-              error: "Cannot delete location with associated products.",
-            });
+          return res.status(400).json({
+            error: "Cannot delete location with associated products.",
+          });
         default:
-          return res.status(500).json({ error: "Failed to delete location." });
+          break;
       }
     }
     res.status(500).json({ error: "Failed to delete location." });
@@ -65,7 +60,7 @@ export const editLocation = async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, description } = req.body;
 
-    const updatedData = { name, description }; 
+    const updatedData = { name, description };
     const cleanedData = Object.fromEntries(
       Object.entries(updatedData).filter(
         ([_, value]) => value && value.trim() !== ""
@@ -73,18 +68,16 @@ export const editLocation = async (req: Request, res: Response) => {
     );
 
     if (Object.keys(cleanedData).length === 0) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "At least one field with a valid value must be provided for the update.",
-        });
+      return res.status(400).json({
+        error:
+          "At least one field with a valid value must be provided for the update.",
+      });
     }
 
     const updatedLocation = await locationService.editLocation(id, cleanedData);
     res.status(200).json(updatedLocation);
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Location not found." });
@@ -93,7 +86,7 @@ export const editLocation = async (req: Request, res: Response) => {
             .status(409)
             .json({ error: "A location with this name already exists." });
         default:
-          return res.status(500).json({ error: "Failed to update location." });
+          break;
       }
     }
     res.status(500).json({ error: "Failed to update location." });

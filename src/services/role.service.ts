@@ -88,39 +88,53 @@ export const editRole = async (
     permissionsIds?: string[];
   }
 ) => {
-  if (data.permissionsIds) {
-    await prisma.rolePermission.deleteMany({
-      where: { roleId: id },
-    });
-    await prisma.rolePermission.createMany({
-      data: data.permissionsIds.map((permissionId) => ({
-        roleId: id,
-        permissionId: permissionId,
-      })),
-    });
-  }
+  try {
+    return await prisma.$transaction(async (tx) => {
+      if (data.permissionsIds) {
+        await tx.rolePermission.deleteMany({
+          where: { roleId: id },
+        });
 
-  return await prisma.role.update({
-    where: { id },
-    data: {
-      name: data.name,
-      description: data.description,
-    },
-    include: {
-      permissions: {
-        include: {
-          permission: true,
+        await tx.rolePermission.createMany({
+          data: data.permissionsIds.map((permissionId) => ({
+            roleId: id,
+            permissionId: permissionId,
+          })),
+        });
+      }
+
+      return await tx.role.update({
+        where: { id },
+        data: {
+          name: data.name,
+          description: data.description,
         },
-      },
-    },
-  });
+        include: {
+          permissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
+      });
+    });
+  } catch (error) {
+    throw new Error("Failed to edit role.");
+  }
 };
 
 export const deleteRole = async (id: string) => {
-  await prisma.rolePermission.deleteMany({
-    where: { roleId: id },
-  });
-  return await prisma.role.delete({
-    where: { id },
-  });
+  try {
+    return await prisma.$transaction(async (tx) => {
+      await tx.rolePermission.deleteMany({
+        where: { roleId: id },
+      });
+
+      return await tx.role.delete({
+        where: { id },
+      });
+    });
+  } catch (error) {
+    throw new Error("Failed to delete role.");
+  }
 };

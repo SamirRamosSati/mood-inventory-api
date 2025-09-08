@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import * as productService from "../services/products.service";
-import { Prisma } from "@prisma/client";
 
 export const createProduct = async (req: Request, res: Response) => {
   try {
@@ -28,7 +27,7 @@ export const createProduct = async (req: Request, res: Response) => {
     });
     res.status(201).json(newProduct);
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2002":
           return res
@@ -80,7 +79,7 @@ export const editProduct = async (req: Request, res: Response) => {
     const updatedProduct = await productService.editProduct(id, cleanedData);
     res.status(200).json(updatedProduct);
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Product not found." });
@@ -89,11 +88,9 @@ export const editProduct = async (req: Request, res: Response) => {
             .status(409)
             .json({ error: "A product with this SKU number already exists." });
         case "P2003":
-          return res
-            .status(400)
-            .json({
-              error: "The provided vendorId or locationId does not exist.",
-            });
+          return res.status(400).json({
+            error: "The provided vendorId or locationId does not exist.",
+          });
         default:
           return res
             .status(500)
@@ -110,7 +107,7 @@ export const deleteProduct = async (req: Request, res: Response) => {
     await productService.deleteProduct(id);
     res.status(200).json({ message: "The product was successfully deleted." });
   } catch (error: any) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error && error.code) {
       switch (error.code) {
         case "P2025":
           return res.status(404).json({ error: "Product not found." });

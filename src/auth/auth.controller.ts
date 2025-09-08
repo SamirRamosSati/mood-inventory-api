@@ -1,89 +1,79 @@
-import { Request, Response } from "express";
-import * as authServices from "../auth/auth.service";
-import { Prisma } from "@prisma/client";
-import * as bcrypt from "bcrypt";
+import { Prisma, PrismaClient, User, Permission } from "@prisma/client";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
-export const registerUser = async (req: Request, res: Response) => {
-  try {
-    const { name, email, initials, password, roleId } = req.body;
+const prisma = new PrismaClient();
 
-    if (
-      !name ||
-      name.trim() === "" ||
-      !email ||
-      email.trim() === "" ||
-      !password ||
-      password.trim() === "" ||
-      !roleId ||
-      roleId.trim() === "" ||
-      !!initials ||
-      initials.trim() === ""
-    ) {
-      return res.status(400).json({
-        error: "All required fields must be provided.",
-      });
-    }
+export const registerUser = async (
+  data: Prisma.UserCreateInput
+): Promise<User> => {
+  const hashedPassword = await bcrypt.hash(data.password, 10);
 
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    const userData = {
-      name,
-      initials,
-      email,
+  const user = await prisma.user.create({
+    data: {
+      ...data,
       password: hashedPassword,
-      role: {
-        connect: { id: roleId },
-      },
-    };
-
-    const newUser = await authServices.registerUser(userData);
-
-    return res.status(201).json({
-      id: newUser.id,
-      name: newUser.name,
-      email: newUser.email,
-    });
-  } catch (error: any) {
-    console.error("Error during user registration:", error);
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        return res
-          .status(409)
-          .json({ error: "Email or initials already in use." });
-      }
-    }
-    return res.status(500).json({ error: "Failed to register user." });
-  }
+    },
+  });
+  return user;
 };
 
-export const login = async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body;
-
-    if ((!email || email.trim() === "", !password || password.trim() === "")) {
-      return res.status(400).json({
-        error: "Email and Password are required",
-      });
-    }
-    const { token, user } = await authServices.loginUser(email, password);
-    return res.status(200).json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        initials: user.initials,
-        role: user.role.name,
-        permissions: user.permissions,
+export const loginUser = async (
+  email: string,
+  password: string
+): Promise<{
+  token: string;
+  user: Omit<User, "password"> & {
+    permissions: string[];
+    role: { name: string };
+  };
+}> => {
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: {
+      role: {
+        include: {
+          permissions: {
+            include: {
+              permission: true,
+            },
+          },
+        },
       },
-    });
-  } catch (error: any) {
-    if (error.message === "Invalid credentials") {
-      return res.status(401).json({ error: "Invalid email or password." });
-    }
-    console.error("Error during login:", error);
-    return res.status(500).json({ error: "Failed to login." });
+    },
+  });
+
+  if (!user) {
+    throw new Error("Invalid credentials");
   }
+
+  const passwordMatch = await bcrypt.compare(password, user.password);
+
+  if (!passwordMatch) {
+    throw new Error("Invalid credentials");
+  }
+
+  const permissions = user.role.permissions.map((rp) => rp.permission.name);
+
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      permissions: permissions,
+    },
+    process.env.JWT_SECRET as string,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  const { password: _, ...userWithoutPassword } = user;
+
+  return {
+    token,
+    user: {
+      ...userWithoutPassword,
+      permissions,
+      role: { name: user.role.name },
+    },
+  };
 };

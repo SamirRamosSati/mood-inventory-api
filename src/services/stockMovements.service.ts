@@ -10,24 +10,26 @@ export const createStockMovement = async (data: {
   staffId?: string;
   notes?: string;
 }) => {
-  const newMovement = await prisma.stockMovement.create({ data });
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const newMovement = await tx.stockMovement.create({ data });
 
-  let quantity = newMovement.quantityChange;
+    let quantity = newMovement.quantityChange;
 
-  if (newMovement.type === "DELIVERY" || newMovement.type === "PICKUP") {
-    quantity = -quantity;
-  }
+    if (newMovement.type === "PICKUP") {
+      quantity = -quantity;
+    }
 
-  const updatedProduct = await prisma.product.update({
-    where: { id: newMovement.productId },
-    data: {
-      currentStock: {
-        increment: quantity,
+    const updatedProduct = await tx.product.update({
+      where: { id: newMovement.productId },
+      data: {
+        currentStock: {
+          increment: quantity,
+        },
       },
-    },
-  });
+    });
 
-  return newMovement;
+    return newMovement;
+  });
 };
 
 export const getStockMovements = async (
@@ -58,9 +60,9 @@ export const deleteStockMovements = async (id: string) => {
     const quantityToRevert = movement.quantityChange;
     let incrementValue = 0;
 
-    if (movement.type === "DELIVERY" || movement.type === "PICKUP") {
+    if (movement.type === "PICKUP") {
       incrementValue = quantityToRevert;
-    } else if (movement.type === "ARRIVAL") {
+    } else if (movement.type === "ARRIVAL" || movement.type === "DELIVERY") {
       incrementValue = -quantityToRevert;
     } else {
       throw new Error(`Unknown movement type: ${movement.type}`);
