@@ -56,7 +56,7 @@ export const deleteStockMovements = async (id: string) => {
     throw new Error("Movement id not found");
   }
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     const quantityToRevert = movement.quantityChange;
     let incrementValue = 0;
 

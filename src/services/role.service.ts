@@ -29,14 +29,12 @@ export const createRole = async (
       },
     });
     return role;
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2002") {
-        throw new Error("A role with this name already exists.");
-      }
+  } catch (error: any) {
+    if (error === "P2002") {
+      throw new Error("A role with this name already exists.");
     }
-    throw new Error("Failed to create role.");
   }
+  throw new Error("Failed to create role.");
 };
 
 export const getRoles = async () => {
@@ -89,7 +87,7 @@ export const editRole = async (
   }
 ) => {
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       if (data.permissionsIds) {
         await tx.rolePermission.deleteMany({
           where: { roleId: id },
@@ -125,7 +123,7 @@ export const editRole = async (
 
 export const deleteRole = async (id: string) => {
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.rolePermission.deleteMany({
         where: { roleId: id },
       });

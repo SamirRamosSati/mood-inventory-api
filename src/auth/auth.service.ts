@@ -1,10 +1,12 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
-export const registerUser = async (data: Prisma.UserCreateInput) => {
+export const registerUser = async (
+  data: Prisma.UserCreateInput
+): Promise<User> => {
   const hashedPassword = await bcrypt.hash(data.password, 10);
 
   const user = await prisma.user.create({
@@ -16,7 +18,13 @@ export const registerUser = async (data: Prisma.UserCreateInput) => {
   return user;
 };
 
-export const loginUser = async (email: string, password: string) => {
+export const loginUser = async (
+  email: string,
+  password: string
+): Promise<{
+  token: string;
+  user: Omit<User, "password"> & { permissions: string[] };
+}> => {
   const user = await prisma.user.findUnique({
     where: { email },
     include: {
@@ -54,5 +62,8 @@ export const loginUser = async (email: string, password: string) => {
       expiresIn: "7d",
     }
   );
-  return { token, user: { ...user, permissions } };
+
+  const { password: _, ...userWithoutPassword } = user;
+
+  return { token, user: { ...userWithoutPassword, permissions } };
 };

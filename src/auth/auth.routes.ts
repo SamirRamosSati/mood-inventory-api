@@ -1,6 +1,5 @@
 import { Router } from "express";
-import { login } from "./auth.controller";
-import { registerUser } from "./auth.controller";
+import { registerUser, loginUser } from "./auth.controller";
 import { authMiddleware } from "../middleware/auth-middleware";
 import { checkPermission } from "../middleware/permission-middleware";
 
@@ -13,6 +12,6 @@ router.post(
   registerUser
 );
 
-router.post("/login", login);
+router.post("/login", loginUser);
 
 export default router;
