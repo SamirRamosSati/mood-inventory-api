@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { PrismaClient, MovementType } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
+import { MovementType } from "../model/movementType";
 import * as stockMovementService from "../services/stockMovements.service";
 
 const prisma = new PrismaClient();

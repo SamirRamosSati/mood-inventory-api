@@ -1,4 +1,5 @@
-import { PrismaClient, Prisma, MovementType } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
+import { MovementType } from "../model/movementType";
 
 const prisma = new PrismaClient();
 
@@ -99,7 +100,7 @@ export const editStockMovement = async (
     throw new Error("Movement not found");
   }
 
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     if (
       data.quantityChange !== undefined &&
       data.quantityChange !== originalMovement.quantityChange
