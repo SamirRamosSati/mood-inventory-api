@@ -33,9 +33,7 @@ export const createStockMovement = async (data: {
   });
 };
 
-export const getStockMovements = async (
-  filters: Prisma.StockMovementWhereInput
-) => {
+export const getStockMovements = async (filters: any) => {
   return await prisma.stockMovement.findMany({
     where: filters,
     orderBy: {
