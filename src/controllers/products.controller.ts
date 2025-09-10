@@ -48,7 +48,7 @@ export const getProducts = async (req: Request, res: Response) => {
     const products = await productService.getProducts();
     res.status(200).json(products);
   } catch (error: any) {
-    return res.status(500).json({ error: "Failed to fetch products." });
+    return res.status(500).json({ error: "Failed to fetch the products." });
   }
 };
 
