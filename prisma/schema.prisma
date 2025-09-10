@@ -99,3 +99,4 @@ model Location {
   updatedAt   DateTime  @updatedAt
   products    Product[]
 }
+
