@@ -10,10 +10,12 @@ import stockMovementRoutes from "./routes/stockMovements.routes";
 import roleRoutes from "./routes/role.routes";
 import authRoutes from "./auth/auth.routes";
 import permissionsRoutes from "./routes/permission.routes";
+import cors from "cors";
 
 dotenv.config();
 
 const app = express();
+app.use(cors());
 const port = process.env.PORT || 3000;
 
 const prisma = new PrismaClient();
