@@ -78,6 +78,18 @@ export const getRoleById = async (id: string) => {
   });
 };
 
+export const getAllRoleLookups = async () => {
+  return await prisma.role.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+};
+
 export const editRole = async (
   id: string,
   data: {

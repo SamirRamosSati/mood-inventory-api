@@ -3,6 +3,7 @@ import {
   createRole,
   getRoles,
   getRoleById,
+  getRoleLookups,
   editRole,
   deleteRole,
 } from "../controllers/role.controller";
@@ -14,6 +15,13 @@ const router = Router();
 router.post("/", authMiddleware, checkPermission("create_role"), createRole);
 
 router.get("/", authMiddleware, checkPermission("read_roles"), getRoles);
+
+router.get(
+  "/lookup",
+  authMiddleware,
+  checkPermission("read_roles"),
+  getRoleLookups
+);
 
 router.get("/:id", authMiddleware, checkPermission("read_roles"), getRoleById);
 

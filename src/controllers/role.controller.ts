@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import * as roleService from "../services/role.service";
 
 export const createRole = async (req: Request, res: Response) => {
@@ -54,6 +54,19 @@ export const getRoleById = async (req: Request, res: Response) => {
     res.status(200).json(role);
   } catch (error: any) {
     return res.status(500).json({ error: "Failed to fetch role." });
+  }
+};
+
+export const getRoleLookups = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const roles = await roleService.getAllRoleLookups();
+    res.status(200).json(roles);
+  } catch (error) {
+    next(error);
   }
 };
 
